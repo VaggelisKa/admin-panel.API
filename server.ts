@@ -1,5 +1,7 @@
-import { applyGraphQL, gql, GQLError } from "https://deno.land/x/oak_graphql/mod.ts";
+import { applyGraphQL, gql } from "https://deno.land/x/oak_graphql/mod.ts";
 import { Router, RouterContext } from "https://deno.land/x/oak@v6.4.1/router.ts";
+
+import { client } from './database/db.ts';
 
 // GraphQL type
 const typeDefs = (gql as any) `
@@ -18,14 +20,19 @@ const typeDefs = (gql as any) `
     }
 `;
 
-const users = [
-    { username: 'Jane', email: 'jane@test.com', password: 'abc' }
-]
 
 // Resolvers
 const resolvers = {
     Query: {
-        users: () => users
+        users: async () => {
+            await client.connect();
+
+            const result = await client.query('SELECT * FROM users;')
+
+            const users = result.rowsOfObjects();
+
+            return users;
+        }
     },
 
     Mutation: {
@@ -38,7 +45,7 @@ const resolvers = {
                     password,
                 };
 
-                users.push(newUser);
+                // users.push(newUser);
 
                 return newUser;
             }
