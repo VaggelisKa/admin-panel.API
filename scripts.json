@@ -5,7 +5,8 @@
       "cmd": "deno run index.ts",
       "desc": "run my index.ts file",
       "allow": ["net", "read"],
-      "unstable": true
+      "unstable": true,
+      "reload": false
     }
   }
 }
