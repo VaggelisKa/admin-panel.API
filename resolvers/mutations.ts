@@ -1,17 +1,19 @@
 import * as bcrypt from "https://deno.land/x/bcrypt/mod.ts";
+import { RouterContext } from "https://deno.land/x/oak/mod.ts";
+
 
 import { client } from "../database/db.ts";
 import { SignupArgs, User, UserResponse } from "../types/types.ts";
-import { createToken } from "../utils/jwt.ts";
+import { createToken, sendToken } from "../utils/token-handler.ts";
 import { insertUserString, queryByEmailString } from "../utils/queryStrings.ts";
 import { validatePassword, validateUsername, validateEmail } from "../utils/validations.ts";
 
 
 export const Mutation = {
     signup: async (
-            parent: any, 
-            {username, email, password}: SignupArgs, 
-            ctx: any, info: any
+            _: any, 
+            { username, email, password }: SignupArgs, 
+            { cookies }: RouterContext
         ): Promise<UserResponse | null | undefined> => {
             try {
                 if (!username) throw new Error('Username is required!');
@@ -52,9 +54,11 @@ export const Mutation = {
                 }
                 await client.end();
                 
-                //Create JWT token
+                // Create JWT token
                 const token = await createToken(newUser.id, newUser.token_version);
-                console.log('JWT TOKEN: ' + token);
+
+                // Send token through cookie
+                sendToken(cookies, token);
 
                 return userToReturn;
             } catch (error) {
