@@ -2,8 +2,10 @@ import * as bcrypt from "https://deno.land/x/bcrypt/mod.ts";
 
 import { client } from "../database/db.ts";
 import { SignupArgs, User, UserResponse } from "../types/types.ts";
+import { createToken } from "../utils/jwt.ts";
 import { insertUserString, queryByEmailString } from "../utils/queryStrings.ts";
 import { validatePassword, validateUsername, validateEmail } from "../utils/validations.ts";
+
 
 export const Mutation = {
     signup: async (
@@ -48,6 +50,12 @@ export const Mutation = {
                     roles: newUser.roles,
                     created_at: newUser.created_at
                 }
+                await client.end();
+                
+                //Create JWT token
+                const token = await createToken(newUser.id, newUser.token_version);
+                console.log('JWT TOKEN: ' + token);
+
                 return userToReturn;
             } catch (error) {
                 console.log(error);
