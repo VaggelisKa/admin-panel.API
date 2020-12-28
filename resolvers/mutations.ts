@@ -1,13 +1,15 @@
 import * as bcrypt from "https://deno.land/x/bcrypt/mod.ts";
 import { Context, RouterContext } from "https://deno.land/x/oak/mod.ts";
+import { v4 } from "https://deno.land/std@0.82.0/uuid/mod.ts";
 
 
 import { client } from "../database/db.ts";
 import { SigninArgs, SignupArgs, User, UserResponse } from "../types/types.ts";
 import { createToken, deleteToken, sendToken } from "../utils/token-handler.ts";
-import { insertUserString, queryByEmailString, updateTokenVersionString } from "../utils/queryStrings.ts";
+import { insertUserString, queryByEmailString, updateRequestResetPasswordString, updateTokenVersionString } from "../utils/queryStrings.ts";
 import { validatePassword, validateUsername, validateEmail } from "../utils/validations.ts";
 import { isAuthenticated } from "../utils/authUtils.ts";
+import { sendEmail } from "../utils/email-handler.ts";
 
 
 export const Mutation = {
@@ -115,7 +117,7 @@ export const Mutation = {
         ): Promise<{ message: string } | null> => {
             try {
                 const user = await isAuthenticated(request);
-                const newTokenVersion = user.token_version + 1;
+                const newTokenVersion = 1;
 
                 await client.connect();
 
@@ -131,6 +133,59 @@ export const Mutation = {
                 return { message: `Goodbye ${updatedUser.username}` }
             } catch (error) {
                 throw error
+            }
+        },
+
+    requestToResetPassword: async (
+            _: any,
+            { email }: { email: string },
+        ): Promise<{ message: string } | null> => {
+            try {
+                if (!email) throw new Error('Email is required');
+                const formattedEmail = email.trim().toLowerCase();
+
+                // Querry user from database
+                await client.connect();
+                const result = await client.query(queryByEmailString(formattedEmail));
+                
+                const user = result.rowsOfObjects()[0] as User;
+                if (!user) throw new Error('Email is not in use by any user');
+
+                // Create reset password token & token expiry time
+                const uuid = v4.generate();
+                const reset_password_token = await bcrypt.hash(uuid);
+                const reset_password_token_expiry = Date.now() + 1000 * 1800;
+
+                // Update user
+                const updatedUserData = await client.query(updateRequestResetPasswordString(
+                    email, 
+                    reset_password_token, 
+                    reset_password_token_expiry
+                ));
+                const updatedUser = updatedUserData.rowsOfObjects()[0] as User;
+                if (!updatedUser) throw new Error('Sorry, you cannot proceed');
+
+                // Send a reset link
+                const subject = 'Reset your password';
+                const html = `
+                    <div style={{width: '60%'}}>
+                        <p>Please click the link below to reset your password</p>
+                        <a 
+                            href='http://localhost:8000/?resetToken=${reset_password_token}' 
+                            target='blank'
+                            style={{color: 'blue'}}
+                        > Click to reset password
+                        </a>
+                    </div>
+                `;
+                const res = await sendEmail(email, subject, html);
+                if (!res.ok) throw new Error('Sorry, something went wrong');
+
+                return { 
+                    message: 'Please check your email for further instructions' 
+                };
+            } catch (error) {
+                throw error;
             }
         }
 };

@@ -37,7 +37,7 @@ export enum Provider {
   export type SignupArgs = Pick<User, "username" | "email" | "password">;
   export type SigninArgs = Omit<SignupArgs, "username">;
   export type UserResponse = Pick<User, "id" | "username" | "email" | "roles" | "created_at">;
-  export type PayloadInfo = { id: string; tokenVersion: number;}
+  export type PayloadInfo = { id: string; tokenVersion: number; }
 
   export type DecodedToken = {
     payload: {

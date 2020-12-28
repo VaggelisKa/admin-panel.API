@@ -30,5 +30,7 @@ import { gql } from "https://deno.land/x/oak_graphql/mod.ts";
         signup(username: String!, email: String!, password: String!): User
         signin(email: String!, password: String!): User
         signout: ResponseMessage
+        requestToResetPassword(email: String!): ResponseMessage
+        resetPassword(newPassword: String!, token: String!): ResponseMessage
     }
 `;
