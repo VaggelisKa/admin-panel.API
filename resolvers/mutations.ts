@@ -3,7 +3,7 @@ import { RouterContext } from "https://deno.land/x/oak/mod.ts";
 
 
 import { client } from "../database/db.ts";
-import { SignupArgs, User, UserResponse } from "../types/types.ts";
+import { SigninArgs, SignupArgs, User, UserResponse } from "../types/types.ts";
 import { createToken, sendToken } from "../utils/token-handler.ts";
 import { insertUserString, queryByEmailString } from "../utils/queryStrings.ts";
 import { validatePassword, validateUsername, validateEmail } from "../utils/validations.ts";
@@ -63,6 +63,47 @@ export const Mutation = {
                 return userToReturn;
             } catch (error) {
                 console.log(error);
+            }
+        },
+
+    signin: async (
+            _: any,
+            { email, password }: SigninArgs,
+            { cookies }: RouterContext
+        ): Promise<UserResponse | null | undefined> => {
+            try {
+                if (!email) throw new Error('Email is required!');
+                if (!password) throw new Error('Password is required!');
+
+                const formattedEmail = email.trim().toLowerCase();
+
+                await client.connect();
+
+                const result = await client.query(queryByEmailString(formattedEmail));
+                const user = result.rowsOfObjects()[0] as User;
+                if (!user) throw new Error("Email or password is invalid");
+
+                const isPasswordCorrect = await bcrypt.compare(password, user.password);
+                if (!isPasswordCorrect) throw new Error("Email or password is invalid");
+
+                const userToReturn: UserResponse = {
+                    id: user.id,
+                    email: user.email,
+                    username: user.username,
+                    roles: user.roles,
+                    created_at: user.created_at
+                }
+                await client.end();
+
+                // Create JWT token
+                const token = await createToken(user.id, user.token_version);
+
+                // Send token through cookie
+                sendToken(cookies, token);
+
+                return userToReturn;
+            } catch (error) {
+                console.log(error.message);
             }
         }
 };
