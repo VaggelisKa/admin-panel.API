@@ -35,3 +35,5 @@ export const decodeToken = (token: string) => {
 
     return { payload, signature }
 };
+
+export const deleteToken = (cookies: Cookies) => cookies.delete(TOKEN_NAME);

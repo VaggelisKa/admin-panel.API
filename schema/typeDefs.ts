@@ -22,8 +22,13 @@ import { gql } from "https://deno.land/x/oak_graphql/mod.ts";
         user: User
     }
 
+    type ResponseMessage {
+        message: String!
+    }
+
     type Mutation {
         signup(username: String!, email: String!, password: String!): User
         signin(email: String!, password: String!): User
+        signout: ResponseMessage
     }
 `;

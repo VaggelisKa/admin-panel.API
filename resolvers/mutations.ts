@@ -1,12 +1,13 @@
 import * as bcrypt from "https://deno.land/x/bcrypt/mod.ts";
-import { RouterContext } from "https://deno.land/x/oak/mod.ts";
+import { Context, RouterContext } from "https://deno.land/x/oak/mod.ts";
 
 
 import { client } from "../database/db.ts";
 import { SigninArgs, SignupArgs, User, UserResponse } from "../types/types.ts";
-import { createToken, sendToken } from "../utils/token-handler.ts";
-import { insertUserString, queryByEmailString } from "../utils/queryStrings.ts";
+import { createToken, deleteToken, sendToken } from "../utils/token-handler.ts";
+import { insertUserString, queryByEmailString, updateTokenVersionString } from "../utils/queryStrings.ts";
 import { validatePassword, validateUsername, validateEmail } from "../utils/validations.ts";
+import { isAuthenticated } from "../utils/authUtils.ts";
 
 
 export const Mutation = {
@@ -104,6 +105,32 @@ export const Mutation = {
                 return userToReturn;
             } catch (error) {
                 console.log(error.message);
+            }
+        },
+
+    signout: async (
+           _: any,
+           __: any,
+           { cookies, request }: RouterContext
+        ): Promise<{ message: string } | null> => {
+            try {
+                const user = await isAuthenticated(request);
+                const newTokenVersion = user.token_version + 1;
+
+                await client.connect();
+
+                const updatedUserData = await client.query(updateTokenVersionString(user.id, newTokenVersion));
+                const updatedUser = updatedUserData.rowsOfObjects()[0] as User;
+
+                await client.end();
+
+                if (!updatedUser) throw new Error('There was an error during signout');
+
+                deleteToken(cookies);
+
+                return { message: `Goodbye ${updatedUser.username}` }
+            } catch (error) {
+                throw error
             }
         }
 };
