@@ -1,3 +1,13 @@
+import "https://deno.land/x/oak/mod.ts";
+
+declare module "https://deno.land/x/oak/mod.ts" {
+  interface Request {
+    userId?: string;
+    tokenVersion?: number;
+    exp?: number;
+  }
+}
+
 export enum Provider {
     facebook = 'Facebook',
     google = 'Google',
@@ -27,3 +37,12 @@ export enum Provider {
   export type SignupArgs = Pick<User, "username" | "email" | "password">;
   export type SigninArgs = Omit<SignupArgs, "username">;
   export type UserResponse = Pick<User, "id" | "username" | "email" | "roles" | "created_at">;
+  export type PayloadInfo = { id: string; tokenVersion: number;}
+
+  export type DecodedToken = {
+    payload: {
+      payloadInfo: PayloadInfo,
+      exp: number
+    };
+    signature: string;
+  }

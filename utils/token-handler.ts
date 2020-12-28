@@ -1,4 +1,4 @@
-import { create, getNumericDate, Header, Payload } from "https://deno.land/x/djwt@v2.0/mod.ts";
+import { create, getNumericDate, Header, Payload, decode } from "https://deno.land/x/djwt@v2.0/mod.ts";
 import { Cookies } from "https://deno.land/x/oak/mod.ts";
 
 import { config } from "https://deno.land/x/dotenv@v2.0.0/mod.ts";
@@ -29,3 +29,9 @@ export const sendToken = (cookies: Cookies, token: string) => cookies.set(
     token,
     { httpOnly: true }
 );
+
+export const decodeToken = (token: string) => {
+    const { payload, signature } = decode(token);
+
+    return { payload, signature }
+};

@@ -19,6 +19,7 @@ import { gql } from "https://deno.land/x/oak_graphql/mod.ts";
 
     type Query {
         users: [User]!
+        user: User
     }
 
     type Mutation {
