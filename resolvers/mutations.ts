@@ -256,6 +256,7 @@ export const Mutation = {
                 const result = await client.query(queryByIdString(id));
                 const userToBeUpdated = result.rowsOfObjects()[0] as User;
                 if (!userToBeUpdated) throw new Error('Sorry, you cannot proceed');
+                if (authenticatedUser.id === userToBeUpdated.id) throw new Error('You cannot update your roles');
 
                 // Update user and return response
                 const updateUserResult = await client.query(updateRolesString(id, newRoles));
