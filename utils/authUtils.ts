@@ -20,3 +20,4 @@ export const isAuthenticated = async (request: Request): Promise<User> => {
 };
 
 export const isSuperadmin = (roles: RoleOptions[]): boolean => roles.includes(RoleOptions.superAdmin);
+export const isAdmin = (roles: RoleOptions[]): boolean => roles.includes(RoleOptions.admin);
