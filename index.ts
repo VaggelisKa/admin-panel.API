@@ -7,7 +7,10 @@ const { PORT } = config();
 
 const app = new Application();
 
-app.use(checkToken, GraphQLService.routes(), GraphQLService.allowedMethods());
+// Middlewares
+app.use(checkToken);
+
+app.use(GraphQLService.routes(), GraphQLService.allowedMethods());
 
 console.log("deno server running!!");
 

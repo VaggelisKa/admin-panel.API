@@ -119,13 +119,12 @@ export const Mutation = {
         ): Promise<{ message: string } | null> => {
             try {
                 const user = await isAuthenticated(request);
-                const newTokenVersion = 1;
+                const newTokenVersion = user.token_version + 1;
 
                 await client.connect();
 
                 const updatedUserData = await client.query(updateTokenVersionString(user.id, newTokenVersion));
                 const updatedUser = updatedUserData.rowsOfObjects()[0] as User;
-
                 if (!updatedUser) throw new Error('There was an error during signout');
 
                 await client.end();

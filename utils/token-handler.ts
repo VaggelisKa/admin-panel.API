@@ -18,10 +18,12 @@ export const createToken = async (id: string, tokenVersion: number) => {
     
     const payload: Payload = {
         payloadInfo,
-        exp: getNumericDate(Date.now() + 1000 * 3600 * 24 * 15),
+        exp: Date.now() + 1000 * 3600 * 24 * 15,
     }
 
-    return await create(header, payload, TOKEN_SECRET);
+    const createdToken = await create(header, payload, TOKEN_SECRET);
+
+    return createdToken;
 };
 
 export const sendToken = (cookies: Cookies, token: string) => cookies.set(
