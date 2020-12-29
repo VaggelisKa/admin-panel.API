@@ -6,7 +6,7 @@ import { v4 } from "https://deno.land/std@0.82.0/uuid/mod.ts";
 import { client } from "../database/db.ts";
 import { SigninArgs, SignupArgs, User, UserResponse } from "../types/types.ts";
 import { createToken, deleteToken, sendToken } from "../utils/token-handler.ts";
-import { insertUserString, queryByEmailString, updateRequestResetPasswordString, updateTokenVersionString } from "../utils/queryStrings.ts";
+import { insertUserString, queryByEmailString, queryByResetPasswordTokenString, updateRequestResetPasswordString, updateResetPasswordString, updateTokenVersionString } from "../utils/queryStrings.ts";
 import { validatePassword, validateUsername, validateEmail } from "../utils/validations.ts";
 import { isAuthenticated } from "../utils/authUtils.ts";
 import { sendEmail } from "../utils/email-handler.ts";
@@ -187,6 +187,46 @@ export const Mutation = {
                     message: 'Please check your email for further instructions' 
                 };
             } catch (error) {
+                throw error;
+            }
+        },
+
+    resetPassword: async (
+            _: any,
+            { newPassword, token }: { newPassword: string, token: string }
+        ): Promise<{ message: string } | null> => {
+            try {
+                if (!newPassword || !token) throw new Error('Sorry, you cannot proceed');
+                
+                // Querry users by reset password token
+                await client.connect();
+
+                const result = client.query(queryByResetPasswordTokenString(token));
+                const user = (await result).rowsOfObjects()[0] as User;
+                if (!user) throw new Error('Error during password reset');
+
+                // Check if the reset token is expired
+                if (!user.reset_password_token_expiry) throw new Error('Error during password reset');
+                const isTokenExpired = Date.now() > user.reset_password_token_expiry;
+
+                if (isTokenExpired) 
+                    throw new Error('This email has expired, please go through the reset process again');
+
+                // Hash, salt new password & update user
+                const salt = await bcrypt.genSalt(8);
+                const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+                const updatingUserResult = await client.query(updateResetPasswordString(user.id, hashedPassword));
+                const updatedUser = updatingUserResult.rowsOfObjects()[0] as User;
+                if (!updatedUser) throw new Error('Error during password reset');
+
+                await client.end();
+
+                return {
+                    message: 'Your password has been reset'
+                }
+            } catch (error) {
+                console.log(error);
                 throw error;
             }
         }
