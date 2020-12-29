@@ -6,7 +6,7 @@ import { v4 } from "https://deno.land/std@0.82.0/uuid/mod.ts";
 import { client } from "../database/db.ts";
 import { SigninArgs, SignupArgs, UpdateRolesArgs, User, UserResponse } from "../types/types.ts";
 import { createToken, deleteToken, sendToken } from "../utils/token-handler.ts";
-import { insertUserString, queryByEmailString, queryByIdString, queryByResetPasswordTokenString, updateRequestResetPasswordString, updateResetPasswordString, updateRolesString, updateTokenVersionString } from "../utils/queryStrings.ts";
+import { deleteUserByIdString, insertUserString, queryByEmailString, queryByIdString, queryByResetPasswordTokenString, updateRequestResetPasswordString, updateResetPasswordString, updateRolesString, updateTokenVersionString } from "../utils/queryStrings.ts";
 import { validatePassword, validateUsername, validateEmail } from "../utils/validations.ts";
 import { isAuthenticated, isSuperadmin } from "../utils/authUtils.ts";
 import { sendEmail } from "../utils/email-handler.ts";
@@ -273,6 +273,40 @@ export const Mutation = {
                 await client.end();
                 
                 return userToReturn;
+            } catch (error) {
+                console.log(error);
+                throw error;
+            }
+        },
+
+    deleteUser: async (
+            _: any,
+            { id }: { id: string },
+            { request }: RouterContext
+        ): Promise<{ message: string } | null> => {
+            try {
+                if (!id) throw new Error('Sorry you cannot proceed');
+
+                // Check if user is authenticated
+                const authenticatedUser = await isAuthenticated(request);
+                if (!authenticatedUser) throw new Error('You cannot proceed, please log in first');
+
+                // Check if user who is logged in is SUPERADMIN (authorization)
+                const isUserSuperadmin = isSuperadmin(authenticatedUser.roles);
+                if (!isUserSuperadmin) throw new Error('No authorization');
+                if (authenticatedUser.id === id) throw new Error('You cannot delete yourself');
+
+                // Query database for user and delete
+                await client.connect();
+
+                const deleteResult = await client.query(deleteUserByIdString(id));
+                if (!deleteResult?.query?.result?.rowCount) throw new Error('Error while deleting user');
+
+                await client.end();
+
+                return {
+                    message: `User with ID: "${id}" has been deleted`
+                }
             } catch (error) {
                 console.log(error);
                 throw error;
