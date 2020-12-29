@@ -1,14 +1,14 @@
 import * as bcrypt from "https://deno.land/x/bcrypt/mod.ts";
-import { Context, RouterContext } from "https://deno.land/x/oak/mod.ts";
+import { RouterContext } from "https://deno.land/x/oak/mod.ts";
 import { v4 } from "https://deno.land/std@0.82.0/uuid/mod.ts";
 
 
 import { client } from "../database/db.ts";
-import { SigninArgs, SignupArgs, User, UserResponse } from "../types/types.ts";
+import { SigninArgs, SignupArgs, UpdateRolesArgs, User, UserResponse } from "../types/types.ts";
 import { createToken, deleteToken, sendToken } from "../utils/token-handler.ts";
-import { insertUserString, queryByEmailString, queryByResetPasswordTokenString, updateRequestResetPasswordString, updateResetPasswordString, updateTokenVersionString } from "../utils/queryStrings.ts";
+import { insertUserString, queryByEmailString, queryByIdString, queryByResetPasswordTokenString, updateRequestResetPasswordString, updateResetPasswordString, updateRolesString, updateTokenVersionString } from "../utils/queryStrings.ts";
 import { validatePassword, validateUsername, validateEmail } from "../utils/validations.ts";
-import { isAuthenticated } from "../utils/authUtils.ts";
+import { isAuthenticated, isSuperadmin } from "../utils/authUtils.ts";
 import { sendEmail } from "../utils/email-handler.ts";
 
 
@@ -227,6 +227,51 @@ export const Mutation = {
                 return {
                     message: 'Your password has been reset'
                 }
+            } catch (error) {
+                console.log(error);
+                throw error;
+            }
+        },
+
+    updateRoles: async (
+            _: any,
+            { id, newRoles }: UpdateRolesArgs,
+            { request }: RouterContext
+        ): Promise<UserResponse | null> => {
+            try {
+                if (!newRoles || !id) throw new Error('Sorry, you cannot proceed');
+
+                // Check if user is authenticated
+                const authenticatedUser = await isAuthenticated(request);
+                if (!authenticatedUser) throw new Error('You cannot proceed, please log in first');
+
+                // Check if user who is logged in is SUPERADMIN (authorization)
+                const isUserSuperadmin = isSuperadmin(authenticatedUser.roles);
+                if (!isUserSuperadmin) throw new Error('No authorization');
+
+
+                // Query the user to be updated info
+                await client.connect();
+
+                const result = await client.query(queryByIdString(id));
+                const userToBeUpdated = result.rowsOfObjects()[0] as User;
+                if (!userToBeUpdated) throw new Error('Sorry, you cannot proceed');
+
+                // Update user and return response
+                const updateUserResult = await client.query(updateRolesString(id, newRoles));
+                const updatedUser = updateUserResult.rowsOfObjects()[0] as User;
+                if (!updatedUser) throw new Error('Error while updating user');
+
+                const userToReturn: UserResponse = {
+                    id: updatedUser.id,
+                    email: updatedUser.email,
+                    username: updatedUser.username,
+                    roles: updatedUser.roles,
+                    created_at: updatedUser.created_at
+                }
+                await client.end();
+                
+                return userToReturn;
             } catch (error) {
                 console.log(error);
                 throw error;

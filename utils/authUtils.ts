@@ -1,6 +1,6 @@
 import { Request } from "https://deno.land/x/oak/mod.ts";
 import { client } from '../database/db.ts';
-import { User } from "../types/types.ts";
+import { RoleOptions, User } from "../types/types.ts";
 import { queryByIdString } from "./queryStrings.ts";
 
 export const isAuthenticated = async (request: Request): Promise<User> => {
@@ -18,3 +18,5 @@ export const isAuthenticated = async (request: Request): Promise<User> => {
 
     return user;
 };
+
+export const isSuperadmin = (roles: RoleOptions[]): boolean => roles.includes(RoleOptions.superAdmin);

@@ -32,5 +32,6 @@ import { gql } from "https://deno.land/x/oak_graphql/mod.ts";
         signout: ResponseMessage
         requestToResetPassword(email: String!): ResponseMessage
         resetPassword(newPassword: String!, token: String!): ResponseMessage
+        updateRoles(id: String!, newRoles: [RoleOptions!]!): User
     }
 `;
