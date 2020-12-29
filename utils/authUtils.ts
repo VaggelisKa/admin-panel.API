@@ -14,5 +14,7 @@ export const isAuthenticated = async (request: Request): Promise<User> => {
 
     if (user.token_version !== request.tokenVersion) throw new Error ('Not authenticated');
 
+    await client.end();
+
     return user;
 };

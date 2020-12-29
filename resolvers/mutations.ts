@@ -124,9 +124,9 @@ export const Mutation = {
                 const updatedUserData = await client.query(updateTokenVersionString(user.id, newTokenVersion));
                 const updatedUser = updatedUserData.rowsOfObjects()[0] as User;
 
-                await client.end();
-
                 if (!updatedUser) throw new Error('There was an error during signout');
+
+                await client.end();
 
                 deleteToken(cookies);
 
@@ -158,12 +158,14 @@ export const Mutation = {
 
                 // Update user
                 const updatedUserData = await client.query(updateRequestResetPasswordString(
-                    email, 
+                    formattedEmail, 
                     reset_password_token, 
                     reset_password_token_expiry
                 ));
                 const updatedUser = updatedUserData.rowsOfObjects()[0] as User;
                 if (!updatedUser) throw new Error('Sorry, you cannot proceed');
+
+                await client.end();
 
                 // Send a reset link
                 const subject = 'Reset your password';
@@ -178,7 +180,7 @@ export const Mutation = {
                         </a>
                     </div>
                 `;
-                const res = await sendEmail(email, subject, html);
+                const res = await sendEmail(formattedEmail, subject, html);
                 if (!res.ok) throw new Error('Sorry, something went wrong');
 
                 return { 
