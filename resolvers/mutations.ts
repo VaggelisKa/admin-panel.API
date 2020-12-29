@@ -66,6 +66,7 @@ export const Mutation = {
                 return userToReturn;
             } catch (error) {
                 console.log(error);
+                throw error;
             }
         },
 
@@ -107,6 +108,7 @@ export const Mutation = {
                 return userToReturn;
             } catch (error) {
                 console.log(error.message);
+                throw error;
             }
         },
 
