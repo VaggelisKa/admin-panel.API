@@ -1,7 +1,7 @@
-import { create, getNumericDate, Header, Payload, decode } from "https://deno.land/x/djwt@v2.0/mod.ts";
-import { Cookies } from "https://deno.land/x/oak/mod.ts";
+import { create, Header, Payload, decode } from "../dependencies/djwt-deps.ts";
+import { Cookies } from "../dependencies/oak-deps.ts";
 
-import { config } from "https://deno.land/x/dotenv@v2.0.0/mod.ts";
+import { config } from "../dependencies/dotenv-deps.ts";
 
 const { TOKEN_SECRET, TOKEN_NAME } = config();
 

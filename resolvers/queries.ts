@@ -1,4 +1,4 @@
-import { RouterContext } from "https://deno.land/x/oak/mod.ts";
+import { RouterContext } from "../dependencies/oak-deps.ts";
 import { client } from '../database/db.ts';
 import { UserResponse } from "../types/types.ts";
 import { isAdmin, isAuthenticated, isSuperadmin } from "../utils/authUtils.ts";

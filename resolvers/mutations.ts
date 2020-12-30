@@ -1,6 +1,6 @@
-import * as bcrypt from "https://deno.land/x/bcrypt/mod.ts";
-import { RouterContext } from "https://deno.land/x/oak/mod.ts";
-import { v4 } from "https://deno.land/std@0.82.0/uuid/mod.ts";
+import bcrypt from "../dependencies/bcrypt-deps.ts";
+import { RouterContext } from "../dependencies/oak-deps.ts";
+import { v4 } from "../dependencies/uuid-deps.ts";
 
 
 import { client } from "../database/db.ts";

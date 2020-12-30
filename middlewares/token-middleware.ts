@@ -1,5 +1,5 @@
-import { Middleware } from "https://deno.land/x/oak/mod.ts";
-import { config } from "https://deno.land/x/dotenv@v2.0.0/mod.ts";
+import { Middleware } from "../dependencies/oak-deps.ts";
+import { config } from "../dependencies/dotenv-deps.ts";
 
 import { DecodedToken, User } from "../types/types.ts";
 import { createToken, decodeToken, sendToken } from "../utils/token-handler.ts";

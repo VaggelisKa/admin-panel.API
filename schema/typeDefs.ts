@@ -1,4 +1,4 @@
-import { gql } from "https://deno.land/x/oak_graphql/mod.ts";
+import { gql } from "../dependencies/oak-graphql-deps.ts";
 
 // GraphQL types
  export const typeDefs = (gql as any) `

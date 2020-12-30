@@ -1,4 +1,4 @@
-import { Application } from "https://deno.land/x/oak/mod.ts";
+import { Application } from "./dependencies/oak-deps.ts";
 import { GraphQLService } from './server.ts';
 import { config } from "https://deno.land/x/dotenv@v2.0.0/mod.ts";
 import { checkToken } from "./middlewares/token-middleware.ts";

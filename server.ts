@@ -1,5 +1,5 @@
-import { applyGraphQL } from "https://deno.land/x/oak_graphql/mod.ts";
-import { Router, RouterContext } from "https://deno.land/x/oak@v6.4.1/router.ts";
+import { applyGraphQL } from "./dependencies/oak-graphql-deps.ts";
+import { Router, RouterContext } from "./dependencies/oak-deps.ts";
 import { typeDefs } from './schema/typeDefs.ts';
 import { resolvers } from './resolvers/resolvers.ts';
 
