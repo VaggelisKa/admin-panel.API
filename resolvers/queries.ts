@@ -39,7 +39,7 @@ export const Query = {
         }
     },
 
-    user: async (_: any, __: any, { request }: RouterContext): Promise<UserResponse> => {
+    user: async (_: any, __: any, { request }: RouterContext): Promise<UserResponse | null> => {
         try {
             const authenticatedUser = await isAuthenticated(request);
             if (!authenticatedUser) throw new Error('Please login to proceed');
@@ -54,7 +54,7 @@ export const Query = {
 
             return userToReturn;
         } catch (error) {
-            throw error;
+            return null;
         }
     }
 }
