@@ -174,7 +174,7 @@ export const Mutation = {
                     <div style={{width: '60%'}}>
                         <p>Please click the link below to reset your password</p>
                         <a 
-                            href='http://localhost:8000/?resetToken=${reset_password_token}' 
+                            href='http://localhost:3000/?resetToken=${reset_password_token}' 
                             target='blank'
                             style={{color: 'blue'}}
                         > Click to reset password
