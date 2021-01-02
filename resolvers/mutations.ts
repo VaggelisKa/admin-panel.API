@@ -87,6 +87,10 @@ export const Mutation = {
                 const user = result.rowsOfObjects()[0] as User;
                 if (!user) throw new Error("Email or password is invalid");
 
+                // Check if the reset_password_token is not null
+                if (user.reset_password_token) 
+                    throw new Error('Please finish reseting your password');
+
                 const isPasswordCorrect = await bcrypt.compare(password, user.password);
                 if (!isPasswordCorrect) throw new Error("Email or password is invalid");
 
