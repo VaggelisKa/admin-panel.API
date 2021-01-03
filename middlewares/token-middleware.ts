@@ -10,7 +10,15 @@ import { updateTokenVersionString } from '../utils/queryStrings.ts'
 const { TOKEN_NAME } = config();
 
 export const checkToken: Middleware = async (ctx, next) => {
-    const token = ctx.cookies.get(TOKEN_NAME);
+    let token: string | undefined;
+
+    const authorization = ctx.request.headers.get('authorization');
+    if (authorization) {
+        token = authorization.split(' ')[1];
+    } else {
+        token = ctx.cookies.get(TOKEN_NAME);
+    }
+
     if (token) {
         const decodedToken = decodeToken(token) as DecodedToken | null;
         if (decodedToken) {
