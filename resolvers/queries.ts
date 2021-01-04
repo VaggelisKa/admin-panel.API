@@ -4,7 +4,6 @@ import { UserResponse } from "../types/types.ts";
 import { isAdmin, isAuthenticated, isSuperadmin } from "../utils/authUtils.ts";
 
 
-
 export const Query = {
     users: async (_: any, __: any, { request }: RouterContext): Promise<UserResponse[] | null> => {
         try {
@@ -17,7 +16,7 @@ export const Query = {
     
             await client.connect();
     
-            const result = await client.query('SELECT * FROM users;')
+            const result = await client.query('SELECT * FROM users ORDER BY created_at asc;')
             const users = result.rowsOfObjects();
     
             await client.end();
@@ -31,6 +30,7 @@ export const Query = {
                     created_at: user.created_at
                 })
             );
+
     
             return usersToReturn;
         } catch (error) {
