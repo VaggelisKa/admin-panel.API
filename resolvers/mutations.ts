@@ -4,10 +4,20 @@ import { v4 } from "../dependencies/uuid-deps.ts";
 
 
 import { client } from "../database/db.ts";
-import { SigninArgs, SignupArgs, UpdateRolesArgs, User, UserResponse } from "../types/types.ts";
+import { Provider, SigninArgs, SignupArgs, SocialMediaSigninArgs, UpdateRolesArgs, User, UserResponse } from "../types/types.ts";
 import { createToken, deleteToken, sendToken } from "../utils/token-handler.ts";
-import { deleteUserByIdString, insertUserString, queryByEmailString, queryByIdString, queryByResetPasswordTokenString, updateRequestResetPasswordString, updateResetPasswordString, updateRolesString, updateTokenVersionString } from "../utils/queryStrings.ts";
-import { validatePassword, validateUsername, validateEmail } from "../utils/validations.ts";
+import { 
+    deleteUserByIdString, 
+    insertUserString, 
+    queryByEmailString, 
+    queryByIdString, 
+    queryByProviderIdString, 
+    queryByResetPasswordTokenString, 
+    updateRequestResetPasswordString, 
+    updateResetPasswordString, 
+    updateRolesString, 
+    updateTokenVersionString } from "../utils/queryStrings.ts";
+import { validatePassword, validateUsername, validateEmail, validateProviderToken } from "../utils/validations.ts";
 import { isAuthenticated, isSuperadmin } from "../utils/authUtils.ts";
 import { sendEmail } from "../utils/email-handler.ts";
 
@@ -309,6 +319,90 @@ export const Mutation = {
 
                 return {
                     message: `User with ID: "${id}" has been deleted`
+                }
+            } catch (error) {
+                console.log(error);
+                throw error;
+            }
+        },
+
+    socialMediaLogin: async (
+            _: any,
+            { id, email, username, expiration, provider }: SocialMediaSigninArgs,
+            { cookies }: RouterContext
+        ): Promise<UserResponse | null | undefined> => {
+            try {
+                //Check if args are correct
+                if (!id || !email || !username || !expiration || !provider) 
+                    throw new Error('Error while signing up');
+
+                // Validate token
+                const isTokenValid = validateProviderToken(+expiration);
+                if (!isTokenValid) throw new Error('Sorry cannot proceed');
+
+                // Querry user by provider ID
+                await client.connect();
+
+                const result = await client.query(queryByProviderIdString(id, provider));
+                const user = result.rowsOfObjects()[0] as User;
+
+                const formattedEmail = email.toLowerCase().trim() || provider;
+
+                if (!user) {
+                    // Create new user
+                    let queryRes;
+
+                    if (provider === Provider.facebook) {
+                        queryRes = await client.query(insertUserString(
+                            username,
+                            formattedEmail,
+                            provider,
+                            id
+                        ));
+                    } else {
+                        queryRes = await client.query(insertUserString(
+                            username,
+                            formattedEmail,
+                            provider,
+                            undefined,
+                            id
+                        ));
+                    }
+
+                    const newUser = queryRes.rowsOfObjects()[0] as User;
+                    if (!newUser) throw new Error('Unexpected Error cannot proceed');
+
+                    const userToReturn: UserResponse = {
+                        id: newUser.id,
+                        username: newUser.username,
+                        email: newUser.email,
+                        roles: newUser.roles,
+                        created_at: newUser.created_at
+                    }
+
+                    await client.end();
+
+                // Create & send JWT token
+                const token = await createToken(newUser.id, newUser.token_version);
+                sendToken(cookies, token);
+
+                return userToReturn;
+                } else {
+                    const userToReturn: UserResponse = {
+                        id: user.id,
+                        username: user.username,
+                        email: user.email,
+                        roles: user.roles,
+                        created_at: user.created_at
+                    }
+
+                    await client.end();
+
+                // Create & send JWT token
+                const token = await createToken(user.id, user.token_version);
+                sendToken(cookies, token);
+
+                return userToReturn;
                 }
             } catch (error) {
                 console.log(error);

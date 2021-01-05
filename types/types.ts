@@ -35,6 +35,7 @@ export enum Provider {
   }
 
   export type SignupArgs = Pick<User, "username" | "email" | "password">;
+  export type SocialMediaSigninArgs = Pick<User, "username" | "email" | "id"> & { expiration: string, provider: Provider }
   export type SigninArgs = Omit<SignupArgs, "username">;
   export type UpdateRolesArgs = { id: string, newRoles: RoleOptions[] };
   export type UserResponse = Pick<User, "id" | "username" | "email" | "roles" | "created_at">;

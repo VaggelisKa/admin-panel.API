@@ -9,6 +9,11 @@ import { gql } from "../dependencies/oak-graphql-deps.ts";
         SUPERADMIN
       }
 
+      enum Provider {
+          Google
+          Facebook
+      }
+
     type User {
         id: String!
         username: String!
@@ -34,5 +39,12 @@ import { gql } from "../dependencies/oak-graphql-deps.ts";
         resetPassword(newPassword: String!, token: String!): ResponseMessage
         updateRoles(id: String!, newRoles: [RoleOptions!]!): User
         deleteUser(id: String!): ResponseMessage
+        socialMediaLogin(
+            username: String!,
+            email: String,
+            id: String!,
+            expiration: String!,
+            provider: Provider!
+        ): User
     }
 `;
