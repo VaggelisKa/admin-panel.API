@@ -97,6 +97,13 @@ export const Mutation = {
                 const user = result.rowsOfObjects()[0] as User;
                 if (!user) throw new Error("Email or password is invalid");
 
+                if (user.facebook_id || user.google_id) {
+                    throw new Error(
+                        `This account was created using ${user.facebook_id ? 'Facebook login' : 'Google login'}
+                        , you cannot login via password. Please use the buttons above`
+                    );
+                }
+
                 // Check if the reset_password_token is not null
                 if (user.reset_password_token) 
                     throw new Error('Please finish reseting your password');
@@ -349,6 +356,12 @@ export const Mutation = {
                 const formattedEmail = email.toLowerCase().trim() || provider;
 
                 if (!user) {
+                    // Check if user already has signed up with this email
+                    const res = await client.query(queryByEmailString(formattedEmail));
+                    const userWithEmail = res.rowsOfObjects()[0] as User;
+                    if (userWithEmail)
+                        throw new Error('This email is already in use, please try logging in with your password');
+
                     // Create new user
                     let queryRes;
 
